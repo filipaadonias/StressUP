@@ -1,0 +1,228 @@
+package orgn.feup.af.projcmeb;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.Toast;
+
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.LegendRenderer;
+import com.jjoe64.graphview.series.BarGraphSeries;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+
+public class GraphActivity extends AppCompatActivity {
+
+    String month, year, look_for, selectedValue, selectedTypeGraph;
+    Spinner monthSpinnerYear;
+    GraphView graphView;
+    LineGraphSeries<DataPoint> lineSeries, userSeries;
+    BarGraphSeries<DataPoint> barSeries;
+    DatabaseHelper myDb;
+    ImageView img;
+
+    Float[] hrv;
+    int[] days;
+    Float userHRV;
+
+    String[] spinnerData = {"november 2017", "december 2017", "january 2018", "february 2018", "march 2018", "april 2018"};
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_graph);
+
+        myDb = new DatabaseHelper(this);
+
+        final SharedPreferences preferences = getSharedPreferences("orgn.feup.af.projcmeb.12", MODE_PRIVATE);
+        userHRV = preferences.getFloat("user_hrv", 0);
+        Log.i("TAG basal", userHRV.toString());
+
+        graphView = (GraphView) findViewById(R.id.graph);
+        img = (ImageView) findViewById(R.id.graphImageView);
+        img.setImageResource(R.drawable.linechart);
+
+        monthSpinnerYear = (Spinner) findViewById(R.id.monthSpinner);
+        final SpinnerAdapterGraph spinnerAdapterData = new SpinnerAdapterGraph(getApplicationContext(),spinnerData);
+        monthSpinnerYear.setAdapter(spinnerAdapterData);
+        monthSpinnerYear.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedValue = spinnerData[position].toString();
+
+                graphView.removeAllSeries();
+                if (selectedValue.contains("january")) {month = "01";}
+                if (selectedValue.contains("february")) {month = "02";}
+                if (selectedValue.contains("march")) {month = "03";}
+                if (selectedValue.contains("april")) {month = "04";}
+                if (selectedValue.contains("may")) {month = "05";}
+                if (selectedValue.contains("june")) {month = "06";}
+                if (selectedValue.contains("july")) {month = "07";}
+                if (selectedValue.contains("august")) {month = "08";}
+                if (selectedValue.contains("september")) {month = "09";}
+                if (selectedValue.contains("october")) {month = "10";}
+                if (selectedValue.contains("november")) {month = "11";}
+                if (selectedValue.contains("december")) {month = "12";}
+
+                if(selectedValue.contains("2017")){year = "2017";}
+                if(selectedValue.contains("2018")){year = "2018";}
+
+                Toast.makeText(getApplicationContext(),"Month selected", Toast.LENGTH_SHORT).show();
+
+                //SET THE AXIS
+                graphView.getViewport().setMinY(0.0);
+                graphView.getViewport().setMaxY(200.0);
+                graphView.getViewport().setMinX(0.0);
+                int num_days;
+                if (month == "02") {
+                    if( Float.parseFloat(year) % 4.0 == 0 && Float.parseFloat(year)%100.0 != 0 ) {
+
+                        num_days = 29;
+
+                    } else {
+                      num_days= 28;
+                    }
+                } else if (month == "01" || month == "03" || month == "05" || month == "07" || month == "08" || month == "10" || month == "12") {
+                    num_days= 31;
+                } else {
+                    num_days= 30;
+                }
+                graphView.getViewport().setMaxX(num_days);
+                graphView.getViewport().setYAxisBoundsManual(true);
+                graphView.getViewport().setXAxisBoundsManual(true);
+
+                //build the query
+                look_for = month + "_" + year;
+                //get the hrv values for the selected month
+                hrv = getHRVvalues(look_for);
+                //get the days with measure
+                days = getDaysValue(look_for);
+
+                //CHAR TYPE
+                lineSeries = new LineGraphSeries<>();
+                barSeries = new BarGraphSeries<>();
+                userSeries = new LineGraphSeries<>();
+
+
+                if(hrv.length == 0){
+                    Toast.makeText(getApplicationContext(),"There is no data of the selected month", Toast.LENGTH_SHORT).show();
+                }
+                int x;
+                Float y;
+
+                for (int i =0; i< hrv.length; i++){
+                    y = hrv[i];
+                    x = days[i];
+
+                    DataPoint dp = new DataPoint(x,y);
+                    lineSeries.appendData(dp, true, hrv.length);
+                    barSeries.appendData(dp, true, hrv.length);
+                }
+
+                int x_user;
+                double y_user;
+                for(int d=0; d <= num_days; d++){
+                    x_user = d;
+                    y_user= userHRV;
+                    DataPoint dataPoint = new DataPoint(x_user,y_user);
+                    userSeries.appendData(dataPoint, true, num_days
+                    );
+
+                }
+
+                lineSeries.setDrawDataPoints(true);
+                lineSeries.setDataPointsRadius(10);
+                lineSeries.setAnimated(true);
+                lineSeries.setBackgroundColor(Color.argb(50, 221, 238, 250));
+                lineSeries.setColor(Color.argb(50, 32, 32, 32));
+
+                barSeries.setDataWidth(1);
+                barSeries.setColor(Color.argb(50, 0, 102, 102));
+
+
+                userSeries.setColor(Color.argb(50, 198, 145, 110));
+                userSeries.setTitle("Reference");
+
+                graphView.addSeries(lineSeries);
+                graphView.addSeries(barSeries);
+                graphView.addSeries(userSeries);
+                graphView.getLegendRenderer().setVisible(true);
+                graphView.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
+
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+
+        Button backToProfile = (Button) findViewById(R.id.backToProfileButton);
+        backToProfile.setOnClickListener(new View.OnClickListener()
+
+        {
+            @Override
+            public void onClick(View view) {
+                Intent profileIntent = new Intent(getApplicationContext(), UserProfileActivity.class);
+                startActivity(profileIntent);
+            }
+        });
+
+        Button backToMenu = (Button) findViewById(R.id.backToMenuButton);
+        backToMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent menuIntent = new Intent(getApplicationContext(), MenuActivity.class);
+                startActivity(menuIntent);
+            }
+        });
+    }
+
+    public  Float[] getHRVvalues(String look_for){
+        Cursor cursor = myDb.getHRVDataWhere(look_for);
+        int len = cursor.getCount();
+
+
+        Float[] hrvValue = new Float[len];
+        Float y;
+
+        for(int i = 0; i < len; i++){
+            cursor.moveToNext();
+            y = Float.parseFloat(cursor.getString(0));
+            hrvValue[i] = y;
+        }
+        return hrvValue;
+    }
+
+    public  int[] getDaysValue(String look_for){
+        Cursor cursor = myDb.getDate(look_for);
+        Log.i("TAG CURSOR days", cursor + "");
+        int len = cursor.getCount();
+
+        Log.i("TAG CURSOR LEN days", len + "");
+        String[] date = new String[len];
+        int[] days = new int[len];
+        Integer y;
+        String d;
+
+        for(int i = 0; i < len; i++){
+            cursor.moveToNext();
+            d = cursor.getString(0);
+            y = Integer.parseInt(d.substring(0,2));
+            days[i] = y;
+        }
+        return days;
+    }
+}
+
