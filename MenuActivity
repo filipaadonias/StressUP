@@ -1,0 +1,129 @@
+package orgn.feup.af.projcmeb;
+
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+
+
+public class MenuActivity extends AppCompatActivity {
+
+    ImageView symbol;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_menu);
+
+        symbol= (ImageView) findViewById(R.id.symbolMenuImageView);
+        symbol.setImageResource(R.drawable.symbol);
+
+        Intent intent = getIntent();
+        final Bundle bd = intent.getExtras();
+
+        Button continueButton = (Button) findViewById(R.id.continueButtonMenuLayout);
+        continueButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(bd!=null) {
+                 Boolean justCalibrate = (Boolean) bd.get("justCalibrateNow");
+                    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(MenuActivity.this);
+                    builder.setMessage(R.string.message_justCalibrate);
+
+                    builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                        }
+                    });
+                    android.app.AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                }
+                else{
+                    Intent measureIntent = new Intent(getApplicationContext(), BioLibActivity.class);
+                    startActivity(measureIntent);
+                }
+            }
+        });
+        Button personalAreaButton = (Button) findViewById(R.id.personalAreaButtonMenuLayout);
+        personalAreaButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent personalArealIntent = new Intent(getApplicationContext(),UserProfileActivity.class);
+                startActivity(personalArealIntent);
+            }
+        });
+
+        Button relaxButton = (Button) findViewById(R.id.relaxButtonMenuLayout);
+        relaxButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builderSingle = new AlertDialog.Builder(MenuActivity.this);
+                builderSingle.setTitle("Select one activity:");
+
+                final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(MenuActivity.this, android.R.layout.select_dialog_singlechoice);
+                arrayAdapter.add("Music");
+                arrayAdapter.add("Mindfulness");
+                arrayAdapter.add("Images");
+                arrayAdapter.add("Yoga");
+
+                builderSingle.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+                builderSingle.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String selectedActivity = arrayAdapter.getItem(which);
+                        AlertDialog.Builder builderInner = new AlertDialog.Builder(MenuActivity.this);
+                        builderInner.setMessage(selectedActivity);
+                        Intent relaxIntent = null;
+                        switch (selectedActivity) {
+                            case "Music":
+                                relaxIntent = new Intent(getApplicationContext(),MusicRelaxActivity.class);
+                                break;
+                            case "Mindfulness":
+                                relaxIntent = new Intent(getApplicationContext(),RelaxActivity.class);
+                                break;
+                            case "Images":
+                                relaxIntent = new Intent(getApplicationContext(),ImagesActivity.class);
+                                break;
+                            case "Yoga":
+                                relaxIntent = new Intent(getApplicationContext(),YogaActivity.class);
+                                break;
+                        }
+                        startActivity(relaxIntent);
+                    }
+                });
+                builderSingle.show();
+
+            }
+        });
+
+        Button instructionsButton = (Button) findViewById(R.id.instructionsButtonMenuLayout);
+        instructionsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent instructionsIntent = new Intent(getApplicationContext(),InstructionsActivity.class);
+                startActivity(instructionsIntent);
+            }
+        });
+
+        Button exitButton = (Button) findViewById(R.id.exitButton);
+        exitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.exit(0);
+            }
+        });
+
+
+    }
+}
