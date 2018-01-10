@@ -1,0 +1,159 @@
+package orgn.feup.af.projcmeb;
+
+import java.util.ArrayList;
+
+/**
+ * Created by Ana on 08/12/2017.
+ */
+
+public class Diagnostic {
+
+    ArrayList<Integer> rr;
+    int age;
+    String gender;
+    String activity;
+
+    public void Diagnostic(ArrayList<Integer> rr, int age, String gender, String activity){
+        this.rr=rr;
+        this.activity =activity;
+        this.age = age;
+        this.gender = gender;
+    }
+
+    String finalstate;
+    int countStressed, countNotStressed;
+    public int i = 0;
+
+    public String getDiagnostic() {
+        String diagnostic;
+        String youngness;
+        String state1 = "";
+        String state2 = "";
+        countStressed = 0;
+        countNotStressed = 0;
+
+
+        if (age <= 50) {
+            youngness = "Young";
+        } else {
+            youngness = "Old";
+        }
+
+
+        for (int k = 0; k < rr.size(); k++) {
+            switch (gender) {
+                case "Male":
+                    if (age <= 34) {
+                        if (rr.get(k) <= 810) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    } else if (age >= 35 && age <= 44) {
+                        if (rr.get(k) <= 787) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    } else if (age >= 45 && age <= 54) {
+                        if (rr.get(k) <= 789) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    } else if (age >= 55 && age <= 64) {
+                        if (rr.get(k) <= 781) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    } else if (age >= 65) {
+                        if (rr.get(k) <= 783) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    }
+                case "Female":
+                    if (age <= 34) {
+                        if (rr.get(k) <= 784) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    } else if (age >= 35 && age <= 44) {
+                        if (rr.get(k) <= 781) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    } else if (age >= 45 && age <= 54) {
+                        if (rr.get(k) <= 794) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    } else if (age >= 55 && age <= 64) {
+                        if (rr.get(k) <= 750) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    } else if (age >= 65) {
+                        if (rr.get(k) <= 763) {
+                            state1 = "Stressed";
+                        } else {
+                            state1 = "Not stressed";
+                        }
+                    }
+            }
+
+            switch (youngness) {
+                case "Young":
+                    if (activity == "sedentary") {
+                        if (rr.get(k) <= 751) {
+                            state2 = "Stressed";
+                        } else {
+                            state2 = "Not stressed";
+                        }
+                    } else if (activity == "active" || activity == "athletic") {
+                        if (rr.get(k) <= 934) {
+                            state2 = "Stressed";
+                        } else {
+                            state2 = "Not stressed";
+                        }
+                    }
+                case "Old":
+                    if (activity == "sedentary") {
+                        if (rr.get(k) <= 800) {
+                            state2 = "Stressed";
+                        } else {
+                            state2 = "Not stressed";
+                        }
+                    } else if (activity == "active" || activity == "athletic") {
+                        if (rr.get(k) <= 923) {
+                            state2 = "Stressed";
+                        } else {
+                            state2 = "Not stressed";
+                        }
+                    }
+            }
+
+            if (state1 == "Stressed" || state2 == "Stressed") {
+                finalstate = "Stressed";
+                countStressed++;
+
+            } else {
+                finalstate = "Not Stressed";
+                countNotStressed++;
+            }
+        }
+        if (countStressed >  countNotStressed){
+            diagnostic = "Stressed";
+        } else {
+            diagnostic = "Not Stressed";
+        }
+
+        return diagnostic;
+    }
+}
