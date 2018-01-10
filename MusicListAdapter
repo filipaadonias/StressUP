@@ -1,0 +1,46 @@
+package orgn.feup.af.projcmeb;
+
+import android.content.Context;
+import android.media.MediaPlayer;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+
+public class MusicListAdapter extends ArrayAdapter<String> {
+    Context c;
+    ArrayList<MediaPlayer> musicList;
+    ArrayList<String> musicData;
+
+    public MusicListAdapter (Context c, ArrayList<String> musicData, ArrayList<MediaPlayer> musicList) {
+        super(c, R.layout.simplerow_music, musicData);
+        this.c = c;
+        this.musicData = musicData;
+        this.musicList = musicList;
+    }
+
+    @Override
+    public int getCount() {return musicData.size();}
+
+    @Override
+    public String getItem(int i) {return musicData.get(i);}
+
+    @Override
+    public long getItemId(int i) {return i;}
+
+    @Override
+    public View getView(int i, View convertView, ViewGroup parent) {
+        if( convertView==null){
+            LayoutInflater inflater = (LayoutInflater)c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(R.layout.simplerow_music, null);
+        }
+        TextView music = (TextView) convertView.findViewById(R.id.musicDataTextView);
+        music.setText(musicData.get(i).toString());
+
+        return convertView;
+    }
+
+}
