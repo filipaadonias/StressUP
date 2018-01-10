@@ -1,0 +1,66 @@
+package orgn.feup.af.projcmeb;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
+
+/**
+ * Created by Ana on 04/12/2017.
+ */
+
+public class SpinnerAdapterGraph extends ArrayAdapter<String> {
+    Context c;
+    String[] monthyear;
+
+    public SpinnerAdapterGraph(Context c, String[] my) {
+        super(c, R.layout.simplerow_monthyear_spinneradapter, my);
+        this.c = c;
+        this.monthyear = my;
+    }
+
+    @Override
+    public int getCount() {
+        return monthyear.length;
+    }
+
+    @Override
+    public String getItem(int i) {
+        return monthyear[i];
+    }
+
+    @Override
+    public long getItemId(int i) {
+        return i;
+    }
+
+    @Override
+    public View getDropDownView(int position, View convertView, ViewGroup parent) {
+        if( convertView==null){
+            LayoutInflater inflater = (LayoutInflater)c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(R.layout.simplerow_monthyear_spinneradapter, null);
+        }
+
+        TextView monthYear = (TextView) convertView.findViewById(R.id.monthYearSpinnerTextView);
+
+        //SET DATA
+        monthYear.setText(monthyear[position]);
+
+        return convertView;
+    }
+
+    @Override
+    public View getView(int i, View convertView, ViewGroup parent) {
+        if (convertView == null) {
+            LayoutInflater inflater = (LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(R.layout.simplerow_monthyear_spinneradapter, null);
+        }
+
+        TextView monthYearTV = (TextView) convertView.findViewById(R.id.monthYearSpinnerTextView);
+        monthYearTV.setText(monthyear[i]);
+
+        return convertView;
+    }
+}
