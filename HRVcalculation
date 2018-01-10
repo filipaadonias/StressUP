@@ -1,0 +1,53 @@
+package orgn.feup.af.projcmeb;
+
+import java.util.ArrayList;
+
+/**
+ * Created by Ana on 08/12/2017.
+ */
+public class HRVcalculation {
+
+    ArrayList<Integer> heartRate;
+
+    public void HRVcalculation(ArrayList<Integer> heartRate){
+        this.heartRate=heartRate;
+    }
+
+    public float calculatepNN50(){
+        //pnn50 is defined as the  percentage of successive interval differences larger than 50ms
+        float pNN50=0;
+        for (int i = 0; i < heartRate.size()-1; i++) {
+            if (heartRate.get(i+1)-heartRate.get(i)>50)
+                pNN50++;
+        }
+        pNN50=pNN50/ (float) (heartRate.size()-1);
+        return pNN50;
+    }
+
+    public float calculateSDNN() {
+        float[] hrate = new float[heartRate.size()];
+        for (int i=0; i<heartRate.size(); i++) {
+            hrate[i] = (float) heartRate.get(i);
+        }
+        Statistics s = new Statistics(hrate);
+        return s.getStdDev();
+    }
+
+    public float calculateRMSSD()  {
+        // RMSSD: Root mean square of the successive differences –
+        // used for a good snapshot of the Autonomic Nervous System’s Parasympathetic branch
+        float[] succ_differences = new float[heartRate.size()-1];
+        for (int i=0; i<heartRate.size()-1; i++) {
+            succ_differences[i] = (float) heartRate.get(i+1) -(float) heartRate.get(i) ;
+        }
+
+        float sum_squared=0;
+        float rms;
+        for (int i=0; i<heartRate.size()-1; i++) {
+            sum_squared= (float) (sum_squared + Math.pow(succ_differences[i],2));
+        }
+        rms = (float) (Math.sqrt(sum_squared)/(float)(heartRate.size()-1));
+        return rms;
+    }
+}
+
