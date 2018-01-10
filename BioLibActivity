@@ -1,0 +1,491 @@
+package orgn.feup.af.projcmeb;
+
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Set;
+
+import Bio.Library.namespace.BioLib;
+
+
+public class BioLibActivity extends AppCompatActivity {
+
+    // ##### Search Device #####
+    private BioLib lib = null;
+    private String address = "";
+    private String macaddress = "";
+    private String mConnectedDeviceName = "";
+    private BluetoothDevice deviceToConnect;
+    public static final String DEVICE_NAME = "device_name";
+    public static final String TOAST = "toast";
+    public static String SELECT_DEVICE_ADDRESS = "device_address";
+    public static final int CHANGE_MACADDRESS = 100;
+    private ListView mainListView;
+    private ArrayAdapter<String> listAdapter;
+    private String selectedValue = "";
+    private BluetoothAdapter mBluetoothAdapter = null;
+    Button startMeasure, searchDevices;
+
+
+    ArrayList<Integer> rr;
+    Float pnn50, SDNN, rMSSD, hrv;
+    DatabaseHelper myDb;
+
+    ImageView imgView;
+
+    private int acquisitionTime = 60000;
+
+    TextView status;
+    private boolean isConn = false;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_bio_lib);
+
+        startMeasure = (Button) findViewById(R.id.startButton);
+        searchDevices = (Button) findViewById(R.id.searchDevicesButton);
+        imgView = (ImageView) findViewById(R.id.measureImageView);
+        imgView.setImageResource(R.drawable.measure);
+
+        // ##################################### DATABASE
+
+        myDb = new DatabaseHelper(this);
+
+        // ##################################### to see from where it came
+
+        Intent intent = getIntent();
+        final Bundle bd = intent.getExtras();
+
+        // ##################################### user data
+
+        final SharedPreferences preferences = getSharedPreferences("orgn.feup.af.projcmeb.12", MODE_PRIVATE);
+        final int userAge;
+        final String userBirthday = preferences.getString("user_birthday_path", "");
+        String[] parts = userBirthday.split("/");
+        int bd_day = Integer.parseInt(parts[0]);
+        int bd_month = Integer.parseInt(parts[1]);
+        int bd_year = Integer.parseInt(parts[2]);
+        final Calendar c = Calendar.getInstance();
+        int now_year = c.get(Calendar.YEAR);
+        int now_month = c.get(Calendar.MONTH);
+        int now_day = c.get(Calendar.DAY_OF_MONTH);
+        if (now_month > bd_month){
+            if (now_day < bd_day){
+                userAge = now_year - bd_day - 1;
+            }
+            else {
+                userAge = now_year - bd_day;
+            }
+        }
+        else {
+            userAge = now_year - bd_day;
+        }
+        final String userGender = preferences.getString("user_gender_path", "");
+        final String userActivity = preferences.getString("user_lifestyle_path", "");
+
+        // ###################################################
+
+        rr = new ArrayList<Integer>();
+
+        // ##################################### LAYOUT
+
+        status = (TextView) findViewById(R.id.lblStatusTextView);
+
+        // #############################################
+        status.setText("");
+        try {
+            lib = new BioLib(BioLibActivity.this, mHandler);
+            status.setText("Starting \n");
+
+        } catch (Exception e) {
+            status.append("Error to init BioLib \n");
+            e.printStackTrace();
+        }
+
+        // ################# SELECT THE DEVICE
+        searchDevices.setEnabled(true);
+        startMeasure.setEnabled(false);
+
+        searchDevices.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                final ArrayList<String> lstDevices = new ArrayList<String>();
+
+                //ListView
+                mainListView = new ListView(BioLibActivity.this);
+                //ListViewAdapter
+                listAdapter = new ListAdapter(BioLibActivity.this, lstDevices);
+                mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                if (mBluetoothAdapter != null) {
+                    if (mBluetoothAdapter.isEnabled()) {
+                        // Listing paired devices
+                        Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
+                        for (BluetoothDevice device : devices) {
+                            listAdapter.add(device.getAddress() + "   " + device.getName());
+                        }
+                    }
+                }
+                //Set ListViewAdapter
+                mainListView.setAdapter(listAdapter);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(BioLibActivity.this);
+                builder.setCancelable(true);
+                builder.setView(mainListView);
+                final AlertDialog dialog = builder.create();
+                dialog.show();
+                mainListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        selectedValue = (String) listAdapter.getItem(i);
+                        Toast.makeText(getApplicationContext(), selectedValue + " was selected", Toast.LENGTH_SHORT).show();
+                        String[] aux = selectedValue.split("   ");
+                        selectedValue = aux[0];
+                        Intent intent = new Intent();
+                        intent.putExtra(SELECT_DEVICE_ADDRESS, selectedValue);
+                        // Set result
+                        setResult(CHANGE_MACADDRESS, intent);
+                        address = selectedValue.toString();
+                        dialog.cancel();
+
+
+
+                        // ###################################################
+                        if (address != "") {
+
+                            deviceToConnect = lib.mBluetoothAdapter.getRemoteDevice(address);
+                            try {
+                                lib.Connect(address, 30);
+                                searchDevices.setEnabled(false);
+                                startMeasure.setEnabled(true);
+                            } catch (Exception e) {
+                                searchDevices.setEnabled(true);
+                                startMeasure.setEnabled(false);
+                                status.setText("Error to connect device: " + address);
+                                e.printStackTrace();
+                            }
+                        }
+
+                    }
+                });
+
+
+                startMeasure.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //WAIT
+                        status.setText("measuring...");
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            public void run() {
+
+                                //Toast.makeText(getApplicationContext(), "measuring...", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(), "Data collected", Toast.LENGTH_SHORT).show();
+                                Disconnect();
+                                //TEST
+                                rr.clear();
+                                int[] rrTest = {900,850,870,950};
+                                for (int j = 0; j < rrTest.length; j++) {
+                                    rr.add(rrTest[j]);
+                                }
+
+                                // ###################### HRV CALCULATION
+                                HRVcalculation calc = new HRVcalculation();
+                                calc.HRVcalculation(rr);
+                                //pnn50 = calc.calculatepNN50();
+                                //SDNN = calc.calculateSDNN();
+                                rMSSD = calc.calculateSDNN();
+                                hrv = rMSSD;
+                                Log.i("TAG hrv", hrv.toString());
+                                Boolean calibrate;
+                                Boolean measureAgain;
+                                if (bd != null) {
+                                    if (bd.get("Calibration") != null) {
+                                        calibrate = (Boolean) bd.get("Calibration");
+                                        measureAgain = false;
+
+                                    } else {
+                                        measureAgain = (Boolean) bd.get("MeasureAgain");
+                                        calibrate = false;
+                                    }
+                                }
+                                else {
+                                    measureAgain = false;
+                                    calibrate = false;
+                                }
+
+
+                                if (calibrate) {
+                                        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(BioLibActivity.this);
+                                        builder.setMessage(R.string.message_hrv);
+                                        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                final SharedPreferences.Editor editor = preferences.edit();
+                                                editor.putFloat("user_hrv", hrv);
+                                                editor.apply();
+                                                Intent menuIntent = new Intent(getApplicationContext(), MenuActivity.class);
+                                                Boolean justCalibrateNow = true;
+                                                menuIntent.putExtra("justCalibrateNow", justCalibrateNow);
+                                                startActivity(menuIntent);
+                                            }
+                                        });
+                                        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                Intent againIntent = new Intent(getApplicationContext(), BioLibActivity.class);
+                                                Boolean calibration = true;
+                                                againIntent.putExtra("Calibration", calibration);
+                                                startActivity(againIntent);
+                                            }
+                                        });
+                                        android.app.AlertDialog dialog = builder.create();
+                                        dialog.show();
+                                }
+                                else {
+                                        // ###################### Diagnosis
+                                        Diagnostic diag = new Diagnostic();
+                                        diag.Diagnostic(rr, userAge, userGender, userActivity);
+                                        String state = diag.getDiagnostic();
+                                        Log.i("TAG state", state);
+
+                                        // ###################### ADD DATA TO DATABASE
+                                        AddData(hrv.toString(), state);
+                                        rr.clear();
+                                        if (measureAgain) {
+                                            if (state == "Stressed") {
+                                                android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(BioLibActivity.this);
+                                                builder.setMessage(R.string.message_feedback_no);
+
+                                                builder.setPositiveButton("OK.", new DialogInterface.OnClickListener() {
+                                                    public void onClick(DialogInterface dialog, int id) {
+                                                        Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
+                                                        startActivity(intent);
+                                                    }
+                                                });
+                                                android.app.AlertDialog dialog = builder.create();
+                                                dialog.show();
+                                            } else {
+                                                android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(BioLibActivity.this);
+                                                builder.setMessage(R.string.message_feedback_yes);
+                                                builder.setPositiveButton("OK.", new DialogInterface.OnClickListener() {
+                                                    public void onClick(DialogInterface dialog, int id) {
+                                                        Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
+                                                        startActivity(intent);
+                                                    }
+                                                });
+                                                android.app.AlertDialog dialog = builder.create();
+                                                dialog.show();
+                                            }
+                                        } else {
+
+                                            switch (state) {
+                                                case "Stressed":
+                                                    Intent stressedIntent = new Intent(getApplicationContext(), BadStressDiagnosisActivity.class);
+                                                    startActivity(stressedIntent);
+                                                    break;
+                                                case "Not Stressed":
+                                                    Intent nonStressedIntent = new Intent(getApplicationContext(), GoodStressDiagnosisActivity.class);
+                                                    startActivity(nonStressedIntent);
+                                                    break;
+                                            }
+                                        }
+                                    }
+                            }
+                        }, acquisitionTime);   //60 seconds
+                    }
+                });
+            }
+        });
+    }
+
+
+    /*************************
+     * Disconnect from device.
+     */
+    private void Disconnect() {
+        try {
+            lib.Disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /*************
+     * OnDestroy.
+     */
+    public void OnDestroy() {
+        if (isConn) {
+            Disconnect();
+        }
+    }
+
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (lib.mBluetoothAdapter != null) {
+            lib.mBluetoothAdapter.cancelDiscovery();
+        }
+
+        lib = null;
+    }
+
+    /**
+     * The Handler that gets information back from the BioLib
+     */
+    private final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case BioLib.MESSAGE_DEVICE_NAME:
+                    mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+                    Toast.makeText(getApplicationContext(), "Connected to " + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+                    status.setText("Connected");
+                    break;
+
+                case BioLib.MESSAGE_BLUETOOTH_NOT_SUPPORTED:
+                    Toast.makeText(getApplicationContext(), "Bluetooth NOT supported. Aborting! ", Toast.LENGTH_SHORT).show();
+                    status.append("Bluetooth NOT supported. Aborting! \n");
+                    isConn = false;
+                    break;
+
+                case BioLib.MESSAGE_BLUETOOTH_ENABLED:
+                    Toast.makeText(getApplicationContext(), "Bluetooth is now enabled! ", Toast.LENGTH_SHORT).show();
+                    status.append("Bluetooth is now enabled \n");
+                    //status.append("Macaddress selected: " + address + " \n");
+                    break;
+
+                case BioLib.MESSAGE_BLUETOOTH_NOT_ENABLED:
+                    Toast.makeText(getApplicationContext(), "Bluetooth not enabled! ", Toast.LENGTH_SHORT).show();
+                    status.append("Bluetooth not enabled \n");
+                    isConn = false;
+                    break;
+
+                case BioLib.REQUEST_ENABLE_BT:
+                    Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(enableIntent, BioLib.REQUEST_ENABLE_BT);
+                    status.setText("Request bluetooth enable \n");
+                    break;
+
+                case BioLib.STATE_CONNECTING:
+                    status.setText("   Connecting to device ... \n");
+                    break;
+
+                case BioLib.STATE_CONNECTED:
+                    //Toast.makeText(getApplicationContext(), "Connected to " + deviceToConnect.getName(), Toast.LENGTH_SHORT).show();
+                    status.setText("   Connected to " + deviceToConnect.getName() + " \n");
+                    isConn = true;
+                    break;
+
+                case BioLib.UNABLE_TO_CONNECT_DEVICE:
+                    Toast.makeText(getApplicationContext(), "Unable to connect device! ", Toast.LENGTH_SHORT).show();
+                    status.setText("   Unable to connect device \n");
+                    isConn = false;
+                    break;
+
+                case BioLib.MESSAGE_DISCONNECT_TO_DEVICE:
+                    Toast.makeText(getApplicationContext(), "Device connection was lost", Toast.LENGTH_SHORT).show();
+                    status.setText("   Disconnected from " + deviceToConnect.getName() + " \n");
+                    isConn = false;
+                    break;
+
+                case BioLib.MESSAGE_PEAK_DETECTION:
+                    BioLib.QRS qrs = (BioLib.QRS) msg.obj;
+                    rr.add(qrs.rr);
+                    break;
+
+                case BioLib.MESSAGE_TOAST:
+                    Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST), Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    };
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case BioLib.REQUEST_ENABLE_BT:
+                if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(getApplicationContext(), "Bluetooth is now enabled! ", Toast.LENGTH_SHORT).show();
+                    status.append("Bluetooth is now enabled \n");
+
+                } else {
+                    Toast.makeText(getApplicationContext(), "Bluetooth not enabled! ", Toast.LENGTH_SHORT).show();
+                    status.append("Bluetooth not enabled \n");
+                    isConn = false;
+                }
+                break;
+
+            case 0:
+                switch (resultCode) {
+                    case SearchDeviceActivity.CHANGE_MACADDRESS:
+                        try {
+                            //status.append("\nSelect new macaddress: ");
+                            macaddress = data.getExtras().getString(SearchDeviceActivity.SELECT_DEVICE_ADDRESS);
+                            Toast.makeText(getApplicationContext(), macaddress, Toast.LENGTH_SHORT).show();
+
+                            status.append(macaddress);
+
+                            address = macaddress;
+                        } catch (Exception ex) {
+                            Toast.makeText(getApplicationContext(), "ERROR: " + ex.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                        break;
+                }
+                break;
+        }
+
+
+    }
+
+    ///////////////////////////////////// DATABASE
+    // ##################### ADD DATA #####################
+    public void AddData( final String hrvValue, final String diagnostic) {
+        //Get current date
+        final Calendar c = Calendar.getInstance();
+        int yy = c.get(Calendar.YEAR);
+        int mm = c.get(Calendar.MONTH);
+        int dd = c.get(Calendar.DAY_OF_MONTH);
+        String day;
+        if(dd<10){
+            day = "0" + String.valueOf(dd);
+        }
+        else {
+            day = String.valueOf(dd);
+        }
+        String currentDate = day + "/" + String.valueOf(mm) + "/" + String.valueOf(yy);
+        //TEST
+        //String currentDate = "8/12/2017";
+        //Get current time
+        int currentHour = c.get(Calendar.HOUR);
+        int currentMinutes = c.get(Calendar.MINUTE);
+        String currentTime = String.valueOf(currentHour) + ":" + String.valueOf(currentMinutes);
+
+        boolean isInserted = myDb.insertData(currentDate, currentTime, hrvValue, diagnostic);
+        if (isInserted == true) {
+            Toast.makeText(BioLibActivity.this, "Data Inserted", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(BioLibActivity.this, "Data not Inserted", Toast.LENGTH_LONG).show();
+        }
+    }
+
+}
