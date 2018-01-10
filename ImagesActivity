@@ -1,0 +1,83 @@
+package orgn.feup.af.projcmeb;
+
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.AbsListView;
+import android.widget.GridView;
+
+public class ImagesActivity extends AppCompatActivity {
+
+    private GridView nGridView;
+    String[] imagesName = {"img 1","img 2", "img 3","img 4","img 5", "img 6","img 7","img 8", "img 9","img 10"};
+    int[] images = {
+            R.drawable.relaximage1,
+            R.drawable.relaximage2,
+            R.drawable.relaximage3,
+            R.drawable.relaximage4,
+            R.drawable.relaximage5,
+            R.drawable.relaximage6,
+            R.drawable.relaximage7,
+            R.drawable.relaximage8,
+            R.drawable.relaximage9,
+            R.drawable.relaximage10
+    };
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_images);
+
+        Intent intent = getIntent();
+        final Bundle bd = intent.getExtras();
+
+
+        nGridView = (GridView) findViewById(R.id.imagesGridView);
+        GridAdapter gridAdapter = new GridAdapter(getApplicationContext(),imagesName,images);
+        nGridView.setAdapter(gridAdapter);
+        nGridView.setOnScrollListener(new AbsListView.OnScrollListener(){
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount)
+            {
+                if(firstVisibleItem + visibleItemCount >= totalItemCount){
+                    // End has been reached
+                    if(bd != null) {
+                        Boolean badDiagnosis = (Boolean) bd.get("BadDiagnosis");
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(ImagesActivity.this);
+                        builder.setMessage(R.string.message_measure_again);
+
+
+                        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                Intent measureAgainIntent = new Intent(getApplicationContext(), BioLibActivity.class);
+                                Boolean measureAgain = true;
+                                measureAgainIntent.putExtra("MeasureAgain", measureAgain);
+                                startActivity(measureAgainIntent);
+                            }
+                        });
+                        builder.setNegativeButton("EXIT", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                finish();
+                                System.exit(0);
+                            }
+                        });
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
+                    }
+                }
+            }
+
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState){
+
+            }
+        });
+
+    };
+
+}
