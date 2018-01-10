@@ -1,0 +1,45 @@
+package orgn.feup.af.projcmeb;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+
+public class ListAdapter extends ArrayAdapter<String> {
+    Context c;
+    ArrayList<String> devices;
+
+    public ListAdapter (Context c, ArrayList<String> devices){
+        super(c, R.layout.simplerow_searchdevice, devices);
+        this.c=c;
+        this.devices = devices;
+    }
+
+    @Override
+    public int getCount() {return devices.size();}
+
+    @Override
+    public String getItem(int i) {return devices.get(i);}
+
+    @Override
+    public long getItemId(int i) {return i;}
+
+    @Override
+    public View getView(int i, View convertView, ViewGroup parent) {
+        if( convertView==null){
+            LayoutInflater inflater = (LayoutInflater)c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(R.layout.simplerow_searchdevice, null);
+        }
+
+        TextView device = (TextView) convertView.findViewById(R.id.adapterTextView);
+
+        device.setText(devices.get(i).toString());
+
+        return convertView;
+    }
+}
+
