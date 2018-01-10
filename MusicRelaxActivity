@@ -1,0 +1,212 @@
+package orgn.feup.af.projcmeb;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.SeekBar;
+
+import java.util.ArrayList;
+
+public class MusicRelaxActivity extends Activity implements Runnable {
+
+    private Thread soundThread;
+    ListView musicListView;
+    ArrayList<MediaPlayer> musicList;
+    ArrayList<String> dataMusic;
+    MediaPlayer player;
+    ImageButton playButton, pauseButton;
+    SeekBar seekBar;
+
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_music_relax);
+
+        Intent intent = getIntent();
+        final Bundle bd = intent.getExtras();
+
+
+        ImageView img = (ImageView) findViewById(R.id.musicImageView);
+        img.setImageResource(R.drawable.music);
+
+        pauseButton = (ImageButton) findViewById(R.id.pauseMusicActivityImageButton);
+        playButton = (ImageButton) findViewById(R.id.playMusicActivityImageButton);
+        pauseButton.setEnabled(false);
+        playButton.setEnabled(false);
+        seekBar =(SeekBar) findViewById(R.id.musicSeekBar);
+        setuplisteners();
+
+
+        musicListView = (ListView) findViewById(R.id.musicListView);
+        musicList = new ArrayList<>();
+        dataMusic= new ArrayList<>();
+
+        MediaPlayer musicPlayer1 = MediaPlayer.create(this,R.raw.music1);
+        musicList.add(musicPlayer1);
+        String music1 = "Yann Tiersen - Comptine dUn Autre Été";
+        dataMusic.add(String.valueOf(music1));
+        MediaPlayer musicPlayer2 = MediaPlayer.create(this,R.raw.music2);
+        musicList.add(musicPlayer2);
+        String music2 = "Ludovico Einaudi - Elegy for the Arctic";
+        dataMusic.add(music2);
+        MediaPlayer musicPlayer3 = MediaPlayer.create(this,R.raw.music3);
+        musicList.add(musicPlayer3);
+        String music3 = "Maxence Cyrin - Where Is My Mind (Pixies Cover)";
+        dataMusic.add(music3);
+        MediaPlayer musicPlayer4 = MediaPlayer.create(this,R.raw.music4);
+        musicList.add(musicPlayer4);
+        String music4 = "The Cinematic Orchestra - To Build a Home";
+        dataMusic.add(music4);
+        MediaPlayer musicPlayer5 = MediaPlayer.create(this,R.raw.music5);
+        musicList.add(musicPlayer5);
+        String music5 = "Yiruma - River Flows in you";
+        dataMusic.add(music5);
+
+        playButton.setEnabled(false);
+        pauseButton.setEnabled(false);
+
+        MusicListAdapter adapter = new MusicListAdapter(getApplicationContext(), dataMusic ,musicList);
+        musicListView.setAdapter(adapter);
+
+        musicListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                //To stop previous song
+                if (player != null) {
+                    player.stop();
+                    player.reset();
+                }
+                player = musicList.get(i);
+                player.start();
+                pauseButton.setEnabled(true);
+
+                soundThread = new Thread(MusicRelaxActivity.this);
+                soundThread.start();
+
+                player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                    public void onCompletion(MediaPlayer mp) {
+                        if(bd != null)
+                        {
+                            Boolean badDiagnosis = (Boolean) bd.get("BadDiagnosis");
+
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MusicRelaxActivity.this);
+                            builder.setMessage(R.string.message_measure_again);
+
+
+                            builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                        Intent measureAgainIntent = new Intent(getApplicationContext(), BioLibActivity.class);
+                                    Boolean measureAgain  = true;
+                                    measureAgainIntent.putExtra("MeasureAgain", measureAgain);
+                                    startActivity(measureAgainIntent);
+                                }
+                            });
+                            builder.setNegativeButton("EXIT", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    finish();
+                                    System.exit(0);
+                                }
+                            });
+                            AlertDialog dialog = builder.create();
+                            dialog.show();
+                        }
+                    }
+                });
+            }
+        });
+
+
+
+
+    }
+
+    private void setuplisteners() {
+
+        playButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                player.start();
+                playButton.setEnabled(false);
+                pauseButton.setEnabled(true);
+            }
+        });
+
+        pauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                player.pause();
+                playButton.setEnabled(true);
+                pauseButton.setEnabled(false);
+            }
+        });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser) {
+                    player.seekTo(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+    }
+
+
+    @Override
+    public void run() {
+        int currentPosition = 0;
+        int soundTotal = player.getDuration();
+        seekBar.setMax(soundTotal);
+
+        while (player != null && currentPosition < soundTotal) {
+            try {
+                Thread.sleep(300);
+                currentPosition = player.getCurrentPosition();
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            seekBar.setProgress(currentPosition);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        if (player != null) {
+            player.pause();
+            player.stop();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        if (player != null)
+            player.stop();
+        super.onBackPressed();
+    }
+}
