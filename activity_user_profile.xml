@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="orgn.feup.af.projcmeb.UserProfileActivity"
+    android:background="@drawable/bg">
+
+    <TextView
+        android:id="@+id/riskJobShowProfileTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginTop="8dp"
+        android:fontFamily="monospace"
+        android:text="riskprofession"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="@+id/textView8"
+        app:layout_constraintTop_toBottomOf="@+id/bmiShowProfileTextView" />
+
+    <Button
+        android:id="@+id/button_viewAll"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
+        android:text="View DATA"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/calibrationButton_UserProfile" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="109dp"
+        android:layout_height="151dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@mipmap/ic_launcher_round" />
+
+    <Button
+        android:id="@+id/editWeightButton"
+        android:layout_width="82dp"
+        android:layout_height="33dp"
+        android:layout_marginEnd="8dp"
+        android:fontFamily="monospace"
+        android:text="Edit "
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="@+id/weightShowProfileTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/weightShowProfileTextView" />
+
+    <Button
+        android:id="@+id/editHeightButton"
+        android:layout_width="82dp"
+        android:layout_height="33dp"
+        android:layout_marginEnd="8dp"
+        android:fontFamily="monospace"
+        android:text="Edit "
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="@+id/heightShowProfileTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/heightShowProfileTextView" />
+
+    <TextView
+        android:id="@+id/nameShowProfileTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginStart="16dp"
+        android:fontFamily="monospace"
+        android:text="user name "
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="18sp"
+        app:layout_constraintStart_toEndOf="@+id/imageView"
+        app:layout_constraintTop_toTopOf="@+id/imageView" />
+
+    <TextView
+        android:id="@+id/heightShowProfileTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginTop="10dp"
+        android:fontFamily="monospace"
+        android:text="height"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="@+id/nameShowProfileTextView"
+        app:layout_constraintTop_toBottomOf="@+id/ageShowProfileTextView" />
+
+    <TextView
+        android:id="@+id/weightShowProfileTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginTop="8dp"
+        android:fontFamily="monospace"
+        android:text="weight"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="@+id/nameShowProfileTextView"
+        app:layout_constraintTop_toBottomOf="@+id/heightShowProfileTextView" />
+
+    <TextView
+        android:id="@+id/ageShowProfileTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginTop="10dp"
+        android:fontFamily="monospace"
+        android:text="user age "
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="@+id/nameShowProfileTextView"
+        app:layout_constraintTop_toBottomOf="@+id/nameShowProfileTextView" />
+
+    <TextView
+        android:id="@+id/textView8"
+        android:layout_width="wrap_content"
+        android:layout_height="29dp"
+        android:layout_marginTop="8dp"
+        android:fontFamily="monospace"
+        android:text="BMI:"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="@+id/nameShowProfileTextView"
+        app:layout_constraintTop_toBottomOf="@+id/weightShowProfileTextView" />
+
+    <TextView
+        android:id="@+id/bmiShowProfileTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginStart="8dp"
+        android:fontFamily="monospace"
+        android:text="bmi value"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="18sp"
+        app:layout_constraintStart_toEndOf="@+id/textView8"
+        app:layout_constraintTop_toTopOf="@+id/textView8" />
+
+    <Button
+        android:id="@+id/seeGraphButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:text="See graph"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_viewAll" />
+
+    <Button
+        android:id="@+id/editPreferencesButton"
+        style="@style/Widget.AppCompat.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="monospace"
+        android:text="Edit User preferences"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="10sp"
+        app:layout_constraintEnd_toEndOf="@+id/riskJobShowProfileTextView"
+        app:layout_constraintStart_toStartOf="@+id/riskJobShowProfileTextView"
+        app:layout_constraintTop_toBottomOf="@+id/riskJobShowProfileTextView" />
+
+    <Button
+        android:id="@+id/calibrationButton_UserProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="monospace"
+        android:text="Calibrate StressUP app"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="@+id/editPreferencesButton"
+        app:layout_constraintStart_toStartOf="@+id/editPreferencesButton"
+        app:layout_constraintTop_toBottomOf="@+id/editPreferencesButton" />
+
+</android.support.constraint.ConstraintLayout>
