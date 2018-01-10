@@ -1,0 +1,62 @@
+package orgn.feup.af.projcmeb;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+
+public class WelcomeSplashActivity extends AppCompatActivity
+
+    {
+
+        /** Duration of wait **/
+        private int SPLASH_DISPLAY_LENGTH = 2000;
+        private boolean isTokenValid = false;
+
+
+        /** Called when the activity is first created. */
+        @Override
+        public void onCreate (Bundle icicle){
+        super.onCreate(icicle);
+        setContentView(R.layout.activity_welcome_splash);
+
+
+        SharedPreferences sharedPref = this.getSharedPreferences(getString(R.string.shared_prefs), Context.MODE_PRIVATE);
+        final String name = sharedPref.getString(getString(R.string.user_name_path), null);
+        if (name != null) {
+            Log.i("TAG name", name);
+        }
+
+        checkData(name);
+        startMenuActivity();
+    }
+
+    private void checkData(String name) {
+        if (name != null) {
+            isTokenValid = true;
+        }
+    }
+
+    private void startMenuActivity() {
+         /* New Handler to start the Menu-Activity
+         * and close this Splash-Screen after some seconds.*/
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                /* Create an Intent that will start the Menu-Activity. */
+                if (!isTokenValid) {
+                    Intent mainIntent = new Intent(WelcomeSplashActivity.this, GetUserDataActivity.class);
+                    WelcomeSplashActivity.this.startActivity(mainIntent);
+                    WelcomeSplashActivity.this.finish();
+                } else {
+                    Intent mainIntent = new Intent(WelcomeSplashActivity.this, MenuActivity.class);
+                    WelcomeSplashActivity.this.startActivity(mainIntent);
+                    WelcomeSplashActivity.this.finish();
+                }
+            }
+        }, SPLASH_DISPLAY_LENGTH);
+    }
+}
