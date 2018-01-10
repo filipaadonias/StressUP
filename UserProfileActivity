@@ -1,0 +1,308 @@
+package orgn.feup.af.projcmeb;
+
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
+import android.view.ContextThemeWrapper;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.math.BigDecimal;
+
+public class UserProfileActivity extends AppCompatActivity {
+    //USER DATA
+    public String newUserHeight ="";
+    public String newUserWeight ="";
+    public String userName, userGender;
+    public String userRiskJob;
+    public String userBirthday;
+    public Float userHeight, userWeight, userBMI;
+    public String userActivity;
+    public TextView showUserAge, showUserHeight, showUserWeight, showUserBMI, showUserName, showRiskJob;
+
+
+    //DATABASE
+    DatabaseHelper myDb;
+    Button btnviewAll;
+
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_user_profile);
+
+        // ********************** USER PERSONAL DATA **********************
+        final SharedPreferences preferences = getSharedPreferences("orgn.feup.af.projcmeb.12", MODE_PRIVATE);
+        final SharedPreferences.Editor editor = preferences.edit();
+        userName = preferences.getString("user_name_path", "");
+        userBirthday = preferences.getString("user_birthday_path","");
+        userHeight = preferences.getFloat("user_height_path", 0);
+        userWeight = preferences.getFloat("user_weight_path", 0);
+        userBMI = preferences.getFloat("user_bmi_path", 0);
+        userGender = preferences.getString("user_gender_path", "");
+        userActivity = preferences.getString("user_lifestyle_path", "");
+        userRiskJob = preferences.getString("user_riskjob_path","");
+
+
+        showUserAge = (TextView) findViewById(R.id.ageShowProfileTextView);
+        showUserHeight  = (TextView) findViewById(R.id.heightShowProfileTextView);
+        showUserWeight  = (TextView) findViewById(R.id.weightShowProfileTextView);
+        showUserBMI  = (TextView) findViewById(R.id.bmiShowProfileTextView);
+        showUserName = (TextView) findViewById(R.id.nameShowProfileTextView);
+
+        showUserName.setText(userName);
+        showUserAge.setText(userBirthday);
+        showUserHeight.setText(userHeight.toString() + "cm");
+        showUserWeight.setText(userWeight.toString() +"kg");
+        showUserBMI.setText(userBMI.toString().format("%.2f", userBMI));
+
+        showRiskJob = (TextView) findViewById(R.id.riskJobShowProfileTextView);
+        switch (userRiskJob){
+            case "yes":
+                showRiskJob.setText("Risk profession");
+                break;
+            case "no":
+                showRiskJob.setText("No risk profession");
+                break;
+        }
+
+        ImageView userImg = (ImageView) findViewById(R.id.imageView);
+        switch (userGender){
+            case "Female":
+                userImg.setImageResource(R.drawable.female);
+                break;
+            case "Male":
+                userImg.setImageResource(R.drawable.male);
+                break;
+        }
+
+
+        // ********************** EDIT USER PERSONAL DATA **********************
+        Button editHeight = (Button) findViewById(R.id.editHeightButton);
+        editHeight.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                AlertDialog.Builder builderHeight = new AlertDialog.Builder(new ContextThemeWrapper(UserProfileActivity.this, R.style.myDialog));
+                builderHeight.setTitle("Edit your heigh (in cm)");
+                // Set up the input
+                final EditText inputHeight = new EditText(new ContextThemeWrapper(UserProfileActivity.this, R.style.myDialog));
+                inputHeight.setInputType(InputType.TYPE_CLASS_NUMBER);
+                builderHeight.setView(inputHeight);
+
+                // Set up the buttons
+                builderHeight.setPositiveButton("Save",
+                        new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        newUserHeight= inputHeight.getText().toString();
+                        editor.putFloat(getString(R.string.user_height_path), Float.parseFloat(newUserHeight));
+                        BigDecimal newUserBMI = BigDecimal.valueOf((userWeight / (Float.parseFloat(newUserHeight) * 0.01 * Float.parseFloat(newUserHeight) * 0.01)));
+                        editor.putFloat(getString(R.string.user_bmi_path), newUserBMI.floatValue());
+                        editor.apply();
+                        Toast.makeText(UserProfileActivity.this, "Your height have been changed", Toast.LENGTH_SHORT).show();
+
+                        showUserBMI.setText(newUserBMI.toString().format("%.2f", newUserBMI));
+                        showUserHeight.setText(newUserHeight.toString() + "cm");
+
+                    }
+                });
+                builderHeight.setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                builderHeight.show();
+
+            }
+        });
+
+        Button editWeight = (Button) findViewById(R.id.editWeightButton);
+        editWeight.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builderWeight = new AlertDialog.Builder(new ContextThemeWrapper(UserProfileActivity.this, R.style.myDialog));
+                builderWeight.setTitle("Edit your weigh (in kg)");
+
+                // Set up the input
+                final EditText inputWeight = new EditText(new ContextThemeWrapper(UserProfileActivity.this, R.style.myDialog));
+                inputWeight.setInputType(InputType.TYPE_CLASS_NUMBER);
+                builderWeight.setView(inputWeight);
+
+                // Set up the buttons
+                builderWeight.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        newUserWeight = inputWeight.getText().toString();
+                        editor.putFloat(getString(R.string.user_weight_path), Float.parseFloat(newUserWeight));
+                        BigDecimal newUserBMI = BigDecimal.valueOf(Float.parseFloat(newUserWeight) / (userHeight * 0.01 * userHeight * 0.01));
+                        editor.putFloat(getString(R.string.user_bmi_path), newUserBMI.floatValue());
+                        editor.apply();
+                        Toast.makeText(UserProfileActivity.this, "Your weigh have been changed", Toast.LENGTH_SHORT).show();
+
+                        showUserWeight.setText(newUserWeight.toString() + "kg");
+                        showUserBMI.setText(newUserBMI.toString().format("%.2f", newUserBMI));
+                    }
+                });
+
+                builderWeight.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                builderWeight.show();
+            }
+        });
+
+        Button editPreferences = (Button) findViewById(R.id.editPreferencesButton);
+        editPreferences.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(UserProfileActivity.this, android.R.layout.select_dialog_singlechoice);
+                arrayAdapter.add("Music");
+                arrayAdapter.add("Mindfulness Exercises");
+                arrayAdapter.add("Nature");
+                arrayAdapter.add("Sport");
+
+                AlertDialog.Builder builderPreferences = new AlertDialog.Builder(new ContextThemeWrapper(UserProfileActivity.this, R.style.myDialog));
+                builderPreferences.setTitle("Edit your preferences");
+
+                builderPreferences.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+                builderPreferences.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String selectedActivity = arrayAdapter.getItem(which);
+                        AlertDialog.Builder builderInner = new AlertDialog.Builder(UserProfileActivity.this);
+                        builderInner.setMessage(selectedActivity);
+
+                        String newUserPreferences = "";
+                        switch (selectedActivity) {
+                            case "Music":
+                                newUserPreferences = "music";
+                                break;
+                            case "Mindfulness Exercises":
+                                newUserPreferences = "mindfulness";
+                                break;
+                            case "Nature":
+                                newUserPreferences = "nature";
+                                break;
+                            case "Sport":
+                                newUserPreferences = "sport";
+                                break;
+                        }
+                        editor.putString(getString(R.string.user_prefactivity_path), newUserPreferences);
+                        editor.apply();
+                        Toast.makeText(UserProfileActivity.this, "Your preferences have been changed", Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+                builderPreferences.show();
+            }
+        });
+
+        // ********************** EDIT USER PERSONAL DATA **********************
+        Button calibration = (Button) findViewById(R.id.calibrationButton_UserProfile);
+        calibration.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent calibrationIntent = new Intent(getApplicationContext(),RelaxActivity.class);
+                startActivity(calibrationIntent);
+                Boolean firstTime = true;
+                calibrationIntent.putExtra("FirstTime", firstTime);
+                startActivity(calibrationIntent);
+            }
+        });
+
+        // ********************** DATABASE **********************
+        myDb = new DatabaseHelper(this);
+        btnviewAll = (Button)findViewById(R.id.button_viewAll);
+        viewAll();
+
+        // ********************** GO TO GRAPH **********************
+        Button graphButton =(Button) findViewById(R.id.seeGraphButton);
+        graphButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent graphIntent = new Intent(getApplicationContext(),GraphActivity.class);
+                startActivity(graphIntent);
+            }
+        });
+    }
+
+    // ##################### DELETE DATA #####################
+   /* public void DeleteData() {
+        btnDelete.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Integer deletedRows = myDb.deleteData(editTextId.getText().toString());
+                        if(deletedRows > 0)
+                            Toast.makeText(UserProfileActivity.this,"Data Deleted",Toast.LENGTH_LONG).show();
+                        else
+                            Toast.makeText(UserProfileActivity.this,"Data not Deleted",Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
+    }
+    */
+
+    // ##################### VIEW ALL #####################
+    public void viewAll() {
+        btnviewAll.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Cursor res = myDb.getAllData();
+                        if(res.getCount() == 0) {
+                            // show message
+                            showMessage("Error","Nothing found");
+                            return;
+                        }
+
+                        StringBuffer buffer = new StringBuffer();
+                        while (res.moveToNext()) {
+                            buffer.append("Id: "+ res.getString(0)+"\n");
+                            buffer.append("Date: "+ res.getString(1) +"\n");
+                            buffer.append("Time: "+ res.getString(2)+"\n");
+                            buffer.append("HRV measure: "+ res.getString(3)+"\n");
+                            buffer.append("Diagnostic: " + res.getString(4)+"\n\n");
+                        }
+
+                        // Show all data
+                        showMessage("Data",buffer.toString());
+                    }
+                }
+        );
+    }
+    public void showMessage(String title,String Message){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+        builder.setTitle(title);
+        builder.setMessage(Message);
+        builder.show();
+    }
+
+
+}
+
